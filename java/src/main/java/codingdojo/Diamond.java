@@ -1,41 +1,111 @@
 package codingdojo;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public class Diamond {
 
-    private final char middleLetter;
+    private static final Point FIRST_POINT = new Point('A');
+    private final Point middlePoint;
 
-    public Diamond(char middleLetter) {
-        this.middleLetter = middleLetter;
+    public Diamond(char middlePoint) {
+        this.middlePoint = new Point(middlePoint);
     }
 
-    public List<List<Character>> getRows() {
-        return new ArrayList<List<Character>>();
-    }
-
-    public static String print(char middleLetter) {
-        Diamond diamond = new Diamond(middleLetter);
-        StringBuffer result = new StringBuffer();
-        for (List<Character> chars : diamond.getRows()) {
-            for (Character c: chars) {
-                result.append(c);
-            }
-            result.append("\n");
+    public String print() {
+        if (FIRST_POINT.equals(middlePoint)) {
+            return "A\n";
         }
-        return result.toString();
+        return printUpper(new StringBuffer(), FIRST_POINT);
+
     }
 
-
-
-    public static void main(String[] args) {
-        if (args.length == 1) {
-            System.out.println(Diamond.print(args[0].charAt(0)));
+    private String printUpper(StringBuffer result, Point point) {
+        result.append(asLine(point));
+        if (point.isBefore(middlePoint)) {
+            return printUpper(result, point.next());
         } else {
-            System.out.println("please supply one argument: the char of the diamond middle");
+            return printLower(result, point.previous());
         }
-
     }
 
+    private String printLower(StringBuffer result, Point point) {
+        result.append(asLine(point));
+        if (point.equals(FIRST_POINT)) {
+            return result.toString();
+        }
+        return printLower(result, point.previous());
+    }
+
+    private String asLine(Point point) {
+        return outerIndentation(point) + innerDiamond(point) + "\n";
+    }
+
+    private String innerDiamond(Point point) {
+        if (point.equals(FIRST_POINT)) {
+            return FIRST_POINT.toString();
+        }
+        return point + innerIndentation(point) + point;
+    }
+
+    private String outerIndentation(Point point) {
+        return spaces(middlePoint.distanceFrom(point));
+    }
+
+    private String innerIndentation(Point point) {
+        return spaces(point.innerDistance());
+    }
+
+    private static String spaces(int i) {
+        return new String(new char[i]).replace('\0', ' ');
+    }
+
+    private static class Point {
+        private final int number;
+
+        public Point(final int number) {
+            this.number = number;
+        }
+
+        public int number() {
+            return number;
+        }
+
+        public int distanceFrom(Point currentPoint) {
+            return this.number - currentPoint.number;
+        }
+
+        private int innerDistance() {
+            return 1 + 2 * (number() - FIRST_POINT.number() - 1);
+        }
+
+        public boolean isBefore(Point middleLetter) {
+            return this.number < middleLetter.number;
+        }
+
+        public Point next() {
+            return new Point(number + 1);
+        }
+
+        public Point previous() {
+            return new Point(number - 1);
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf((char) number);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Point point = (Point) o;
+            return new EqualsBuilder().append(number, point.number).isEquals();
+        }
+
+        @Override
+        public int hashCode() {
+            return new HashCodeBuilder(17, 37).append(number).toHashCode();
+        }
+    }
 }
